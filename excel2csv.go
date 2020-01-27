@@ -15,17 +15,17 @@ type csvOptSetter func(*csv.Writer)
 
 // Структура параметров эспорта
 type excelData struct {
-	FileName  string    // Имя файл xlsx
-	SheetName string    // Название листа Excel
-	Start     string    // Адрес стартовой ячейки листа
-	End       string    // Адрес конечной ячейки листа
+	FileName  string // Имя файл xlsx
+	SheetName string // Название листа Excel
+	Start     string // Адрес стартовой ячейки листа
+	End       string // Адрес конечной ячейки листа
 }
 
 func main() {
 	var (
-		outFile   = flag.String("o", "-", "имя CSV-файла, если не будет указано, содержимое будет выведено только на экран")
-		sheetName = flag.String("s", "", "Имя листа для экспорта")
-		diapazon  = flag.String("d", "", "Диапазон ячеек (A1:A2)")
+		outFile   = flag.String("o", "-", "имя CSV-файла. По умолчанию, содержимое будет выведено только на экран")
+		sheetName = flag.String("s", "", "Имя листа для экспорта. По умолчанию, первый лист книги Excel")
+		diapazon  = flag.String("d", "", "Диапазон ячеек (A1:A2). По умолчанию, все заполненные ячейки листа")
 		delimiter = flag.String("r", "\t", "Разделитель ячеек в строке")
 	)
 	flag.Usage = func() {
@@ -105,6 +105,10 @@ func xlsx2csv(w io.Writer, eData excelData, csvOpts csvOptSetter) error {
 	return nil
 }
 
+// Экспорт листа (sheet)
+// w — объект, реализующий io.Writer, например, файл или стандартный выход
+// eData — данные для экспорта
+// csvOpts — параметры записи CSV
 func exportSheet(sheet *xlsx.Sheet, w io.Writer, eData excelData, csvOpts csvOptSetter) error {
 	cw := csv.NewWriter(w)
 	if csvOpts != nil {
@@ -140,10 +144,10 @@ func exportSheet(sheet *xlsx.Sheet, w io.Writer, eData excelData, csvOpts csvOpt
 				vals = vals[:0]
 				for ci, cell := range row.Cells {
 					if ci >= startCol && ci <= endCol {
-						str := cell.Value
-						//if err != nil {
-						//	vals = append(vals, err.Error())
-						//}
+						str, err := cell.FormattedValue()
+						if err != nil {
+							vals = append(vals, err.Error())
+						}
 						vals = append(vals, fmt.Sprintf("%s", str))
 					}
 				}
