@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -74,6 +75,11 @@ func main() {
 	err := xlsx2csv(out, eData, csvOpts)
 	if err != nil {
 		log.Fatal(err)
+	} else {
+		markFile := filepath.Join(os.TempDir(), "xmlcsvexportmark.tmp")
+		if out, err = os.Create(markFile); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
